@@ -43,12 +43,16 @@ services:
 			AUTHENTIK_CLIENT_ID: <forwardauth-client-id>
 			AUTHENTIK_CLIENT_SECRET: <forwardauth-client-secret>
 			# if you have a backchannel to authentik (e.g. internal network, same machine, etc)
-			# AUTHENTIC_BACKCHANNEL_URL: http://authentic:9000
+			# AUTHENTIK_BACKCHANNEL_URL: http://authentik:9000
 		networks:
 			- proxy
+		volumes:
+			- /etc/ssl/certs/:/etc/ssl/certs/:ro
 		labels:
 			traefik.enable: true
 			traefik.http.routers.traefik-forwardauth-authentik-proxy.rule: Host(`access.example.com`) || PathPrefix(`/.well-known/traefik-forwardauth-authentik-proxy/`)
+			traefik.http.routers.traefik-forwardauth-authentik-proxy.priority: 1000000
+			traefik.http.services.traefik-forwardauth-authentik-proxy.loadbalancer.server.port: 8080
 			traefik.http.middlewares.auth.forwardauth.address: http://traefik-forwardauth-authentik-proxy:8080/verify
 			traefik.http.middlewares.auth.forwardauth.trustForwardHeader: true
 			traefik.http.middlewares.auth.forwardauth.authResponseHeaders: X-authentik-username,X-authentik-groups,X-authentik-entitlements,X-authentik-email,X-authentik-name,X-authentik-uid
