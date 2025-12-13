@@ -37,6 +37,9 @@ func (i *Instance) Mux() *http.ServeMux {
 	})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if uri := r.Header.Get("X-Forwarded-Uri"); uri != "" {
+			r.URL.Path = uri
+		}
 		writeError(w, i.handleVerifyDelegatedAccess(w, r))
 	})
 
