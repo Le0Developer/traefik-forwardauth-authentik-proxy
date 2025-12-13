@@ -64,6 +64,13 @@ func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http
 		return fmt.Errorf("return URL host %q does not match request host %q", urlState.returnURL.Host, r.Host)
 	}
 
+	csrf, err := r.Cookie(i.config.CSRFCookieName)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve CSRF cookie: %w", err)
+	} else if csrf.Value != urlState.nonce {
+		return fmt.Errorf("CSRF token mismatch")
+	}
+
 	signedUserState := q.Get("u")
 	if signedUserState == "" {
 		return fmt.Errorf("missing user state parameter")
@@ -80,6 +87,12 @@ func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http
 		Value:    signedUserState,
 		Path:     "/",
 		HttpOnly: true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     i.config.CSRFCookieName,
+		Value:    "",
+		HttpOnly: true,
+		MaxAge:   -1,
 	})
 
 	http.Redirect(w, r, urlState.returnURL.String(), http.StatusFound)
@@ -130,6 +143,12 @@ func (i *Instance) redirectToAccess(w http.ResponseWriter, r *http.Request, stat
 	// we need to sign it, to avoid open redirect vulnerabilities
 	q.Set("s", state[0].sign(i.secret))
 	url.RawQuery = q.Encode()
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     i.config.CSRFCookieName,
+		Value:    state[0].nonce,
+		HttpOnly: true,
+	})
 
 	http.Redirect(w, r, url.String(), http.StatusFound)
 	return nil
