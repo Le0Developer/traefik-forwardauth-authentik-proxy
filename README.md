@@ -35,30 +35,32 @@ it.
 
 ```yml
 services:
-	traefik-forwardauth-authentik-proxy:
-		image: ghcr.io/le0developer/traefik-forwardauth-authentik-proxy:latest
-		environment:
-			ACCESS_BASE_URL: https://access.example.com
-			AUTHENTIK_BASE_URL: https://authentik.example.com
-			AUTHENTIK_CLIENT_ID: <forwardauth-client-id>
-			AUTHENTIK_CLIENT_SECRET: <forwardauth-client-secret>
-			# if you have a backchannel to authentik (e.g. internal network, same machine, etc)
-			# AUTHENTIK_BACKCHANNEL_URL: http://authentik:9000
-		networks:
-			- proxy
-		volumes:
-			- /etc/ssl/certs/:/etc/ssl/certs/:ro
-		labels:
-			traefik.enable: true
-			traefik.http.routers.traefik-forwardauth-authentik-proxy.rule: Host(`access.example.com`) || PathPrefix(`/.well-known/traefik-forwardauth-authentik-proxy/`)
-			traefik.http.routers.traefik-forwardauth-authentik-proxy.priority: 1000000
-			traefik.http.services.traefik-forwardauth-authentik-proxy.loadbalancer.server.port: 8080
-			traefik.http.middlewares.auth.forwardauth.address: http://traefik-forwardauth-authentik-proxy:8080/verify
-			traefik.http.middlewares.auth.forwardauth.trustForwardHeader: true
-			traefik.http.middlewares.auth.forwardauth.authResponseHeaders: X-authentik-username,X-authentik-groups,X-authentik-entitlements,X-authentik-email,X-authentik-name,X-authentik-uid
+  traefik-forwardauth-authentik-proxy:
+    image: ghcr.io/le0developer/traefik-forwardauth-authentik-proxy:latest
+    environment:
+      ACCESS_BASE_URL: https://access.example.com
+      AUTHENTIK_BASE_URL: https://authentik.example.com
+      AUTHENTIK_CLIENT_ID: <forwardauth-client-id>
+      AUTHENTIK_CLIENT_SECRET: <forwardauth-client-secret>
+      # if you have a backchannel to authentik (e.g. internal network, same machine, etc)
+      # AUTHENTIK_BACKCHANNEL_URL: http://authentik:9000
+    networks:
+      - proxy
+    volumes:
+      - /etc/ssl/certs/:/etc/ssl/certs/:ro
+    labels:
+      traefik.enable: true
+      traefik.http.routers.traefik-forwardauth-authentik-proxy.rule:
+        Host(`access.example.com`) ||
+        PathPrefix(`/.well-known/traefik-forwardauth-authentik-proxy/`)
+      traefik.http.routers.traefik-forwardauth-authentik-proxy.priority: 1000000
+      traefik.http.services.traefik-forwardauth-authentik-proxy.loadbalancer.server.port: 8080
+      traefik.http.middlewares.auth.forwardauth.address: http://traefik-forwardauth-authentik-proxy:8080/verify
+      traefik.http.middlewares.auth.forwardauth.trustForwardHeader: true
+      traefik.http.middlewares.auth.forwardauth.authResponseHeaders: X-authentik-username,X-authentik-groups,X-authentik-entitlements,X-authentik-email,X-authentik-name,X-authentik-uid
 
-			traefik.http.middlewares.auth-owner.headers.customRequestHeaders.X-authentik-expected-groups: owner
-		restart: unless-stopped
+      traefik.http.middlewares.auth-owner.headers.customRequestHeaders.X-authentik-expected-groups: owner
+    restart: unless-stopped
 ```
 
 ### Use the middleware in your services
@@ -68,24 +70,24 @@ proxy, and set the expected groups per service.
 
 ```yml
 services:
-	admin-service:
-		image: admin-service:latest
-		networks:
-			- proxy
-		labels:
-			traefik.enable: true
-			traefik.http.routers.admin-service.rule: Host(`admin.example.com`)
-			# The request header middleware for the expected groups must be used first
-			traefik.http.routers.admin-service.middlewares: auth-owner,auth
-		restart: unless-stopped
+  admin-service:
+    image: admin-service:latest
+    networks:
+      - proxy
+    labels:
+      traefik.enable: true
+      traefik.http.routers.admin-service.rule: Host(`admin.example.com`)
+      # The request header middleware for the expected groups must be used first
+      traefik.http.routers.admin-service.middlewares: auth-owner,auth
+    restart: unless-stopped
 
-	plausible-service:
-		image: plausible-service:latest
-		networks:
-			- proxy
-		labels:
-			traefik.enable: true
-			traefik.http.routers.plausible-service.rule: Host(`plausible.example.com`)
-			traefik.http.routers.plausible-service.middlewares: auth
-		restart: unless-stopped
+  plausible-service:
+    image: plausible-service:latest
+    networks:
+      - proxy
+    labels:
+      traefik.enable: true
+      traefik.http.routers.plausible-service.rule: Host(`plausible.example.com`)
+      traefik.http.routers.plausible-service.middlewares: auth
+    restart: unless-stopped
 ```
