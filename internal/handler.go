@@ -28,6 +28,10 @@ func (i *Instance) Mux() *http.ServeMux {
 		writeError(w, i.handleDelegateAccess(w, r))
 	})
 
+	mux.HandleFunc(host+"/whoami", func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, i.handleWhoami(w, r))
+	})
+
 	mux.HandleFunc(host+"/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})

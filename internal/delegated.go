@@ -50,6 +50,10 @@ func (i *Instance) handleDelegateAccess(w http.ResponseWriter, r *http.Request) 
 
 func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http.Request) error {
 	q := r.URL.Query()
+	if q.Has("whoami") {
+		return i.handleWhoami(w, r)
+	}
+
 	signedState := q.Get("s")
 	if signedState == "" {
 		return fmt.Errorf("missing state parameter")
