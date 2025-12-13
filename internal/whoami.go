@@ -27,11 +27,11 @@ func (i *Instance) handleWhoami(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
+	_, _ = w.Write(data)
 	return nil
 }
 
 func nobody(w http.ResponseWriter) error {
-	w.Write([]byte("nobody"))
+	_, _ = w.Write([]byte("nobody"))
 	return nil
 }
