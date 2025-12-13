@@ -72,7 +72,6 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 	// fetch user info
 	burl.Path = "/application/o/userinfo/"
 
-	fmt.Println("fetching userinfo from:", burl.String())
 	req, err = http.NewRequest("GET", burl.String(), nil)
 	if err != nil {
 		return fmt.Errorf("failed to create userinfo request: %w", err)
