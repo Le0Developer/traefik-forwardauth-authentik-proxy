@@ -55,6 +55,7 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return fmt.Errorf("failed to perform token request: %w", err)
 	}
+	//nolint:errcheck // ignore close error
 	defer resp.Body.Close()
 
 	var body map[string]any
@@ -84,6 +85,7 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return fmt.Errorf("failed to perform userinfo request: %w", err)
 	}
+	//nolint:errcheck // ignore close error
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -115,8 +117,7 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 		MaxAge:   -1,
 	})
 
-	i.redirectToAccess(w, r, urlState)
-	return nil
+	return i.redirectToAccess(w, r, urlState)
 }
 
 func (i *Instance) redirectToAuthorize(w http.ResponseWriter, r *http.Request, urlState *urlstate) error {
