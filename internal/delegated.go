@@ -102,6 +102,7 @@ func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http
 		Value:    signedUserState,
 		Path:     "/",
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
@@ -163,6 +164,7 @@ func (i *Instance) redirectToAccess(w http.ResponseWriter, r *http.Request, stat
 		Name:     i.config.CSRFCookieName,
 		Value:    state[0].nonce,
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 		MaxAge:   300,
 	})
 

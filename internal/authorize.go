@@ -109,7 +109,9 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CookieName,
 		Value:    signedUserState,
+		Path:     "/",
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
@@ -140,7 +142,9 @@ func (i *Instance) redirectToAuthorize(w http.ResponseWriter, r *http.Request, u
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
 		Value:    stateStr,
+		Path:     "/",
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 		MaxAge:   300,
 	})
 
