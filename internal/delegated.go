@@ -29,7 +29,7 @@ func (i *Instance) handleDelegateAccess(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("failed to retrieve cookie: %w", err)
 	}
 
-	decoded, err := decodeUserState(cookie.Value, secretForMe)
+	userState, err := decodeUserState(cookie.Value, secretForMe)
 	if errors.Is(err, errInvalidState) {
 		fmt.Println("invalid user state, redirecting to authorize", err)
 		return i.redirectToAuthorize(w, r, urlState)
@@ -46,7 +46,7 @@ func (i *Instance) handleDelegateAccess(w http.ResponseWriter, r *http.Request) 
 
 	q = delegateUrl.Query()
 	q.Set("s", urlState.sign(secretForThem))
-	signedUser, err := decoded.sign(secretForThem)
+	signedUser, err := userState.sign(secretForThem)
 	if err != nil {
 		return fmt.Errorf("failed to sign user state: %w", err)
 	}
