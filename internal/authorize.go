@@ -141,6 +141,7 @@ func (i *Instance) redirectToAuthorize(w http.ResponseWriter, r *http.Request, u
 		Name:     i.config.CSRFCookieName,
 		Value:    stateStr,
 		HttpOnly: true,
+		MaxAge:   300,
 	})
 
 	http.Redirect(w, r, url.String(), http.StatusFound)

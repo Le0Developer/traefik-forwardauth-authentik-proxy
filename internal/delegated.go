@@ -163,6 +163,7 @@ func (i *Instance) redirectToAccess(w http.ResponseWriter, r *http.Request, stat
 		Name:     i.config.CSRFCookieName,
 		Value:    state[0].nonce,
 		HttpOnly: true,
+		MaxAge:   300,
 	})
 
 	http.Redirect(w, r, url.String(), http.StatusFound)
