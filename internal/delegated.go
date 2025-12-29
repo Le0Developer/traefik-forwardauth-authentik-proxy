@@ -15,7 +15,9 @@ func (i *Instance) handleDelegateAccess(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("missing state parameter")
 	}
 
-	urlState, err := decodeURLState(signedState, i.secret)
+	secretForMe := i.secretFor(r.Host)
+
+	urlState, err := decodeURLState(signedState, secretForMe)
 	if err != nil {
 		return fmt.Errorf("failed to decode URL state: %w", err)
 	}
@@ -27,7 +29,7 @@ func (i *Instance) handleDelegateAccess(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("failed to retrieve cookie: %w", err)
 	}
 
-	_, err = decodeUserState(cookie.Value, i.secret)
+	decoded, err := decodeUserState(cookie.Value, secretForMe)
 	if errors.Is(err, errInvalidState) {
 		fmt.Println("invalid user state, redirecting to authorize", err)
 		return i.redirectToAuthorize(w, r, urlState)
@@ -39,9 +41,16 @@ func (i *Instance) handleDelegateAccess(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return fmt.Errorf("failed to parse delegation URL: %w", err)
 	}
+
+	secretForThem := i.secretFor(delegateUrl.Host)
+
 	q = delegateUrl.Query()
-	q.Set("s", signedState)
-	q.Set("u", cookie.Value)
+	q.Set("s", urlState.sign(secretForThem))
+	signedUser, err := decoded.sign(secretForThem)
+	if err != nil {
+		return fmt.Errorf("failed to sign user state: %w", err)
+	}
+	q.Set("u", signedUser)
 	delegateUrl.RawQuery = q.Encode()
 
 	http.Redirect(w, r, delegateUrl.String(), http.StatusFound)
@@ -59,7 +68,9 @@ func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http
 		return fmt.Errorf("missing state parameter")
 	}
 
-	urlState, err := decodeURLState(signedState, i.secret)
+	secretForMe := i.secretFor(r.Host)
+
+	urlState, err := decodeURLState(signedState, secretForMe)
 	if err != nil {
 		return fmt.Errorf("failed to decode URL state: %w", err)
 	}
@@ -80,7 +91,7 @@ func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http
 		return fmt.Errorf("missing user state parameter")
 	}
 
-	_, err = decodeUserState(signedUserState, i.secret)
+	_, err = decodeUserState(signedUserState, secretForMe)
 	if err != nil {
 		return fmt.Errorf("failed to decode user state: %w", err)
 	}
@@ -111,7 +122,7 @@ func (i *Instance) handleVerifyDelegatedAccess(w http.ResponseWriter, r *http.Re
 		return fmt.Errorf("failed to retrieve cookie: %w", err)
 	}
 
-	userState, err := decodeUserState(cookie.Value, i.secret)
+	userState, err := decodeUserState(cookie.Value, i.secretFor(r.Host))
 	if errors.Is(err, errInvalidState) {
 		fmt.Println("invalid user state, redirecting to access", err)
 		return i.redirectToAccess(w, r)
@@ -145,7 +156,7 @@ func (i *Instance) redirectToAccess(w http.ResponseWriter, r *http.Request, stat
 	url := i.config.BaseURL
 	q := url.Query()
 	// we need to sign it, to avoid open redirect vulnerabilities
-	q.Set("s", state[0].sign(i.secret))
+	q.Set("s", state[0].sign(i.secretFor(url.Host)))
 	url.RawQuery = q.Encode()
 
 	http.SetCookie(w, &http.Cookie{

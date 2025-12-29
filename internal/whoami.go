@@ -14,7 +14,7 @@ func (i *Instance) handleWhoami(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	state, err := decodeUserState(userState.Value, i.secret)
+	state, err := decodeUserState(userState.Value, i.secretFor(r.Host))
 	if errors.Is(err, errInvalidState) {
 		return nobody(w)
 	} else if err != nil {

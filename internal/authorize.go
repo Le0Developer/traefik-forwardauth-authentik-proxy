@@ -23,7 +23,9 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("failed to retrieve CSRF cookie: %w", err)
 	}
 
-	urlState, err := decodeURLState(csrf.Value, i.secret)
+	secretForMe := i.secretFor(r.Host)
+
+	urlState, err := decodeURLState(csrf.Value, secretForMe)
 	if err != nil {
 		return fmt.Errorf("failed to decode URL state: %w", err)
 	} else if urlState.nonce != state {
@@ -98,7 +100,7 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 
 	userInfo.Expiration = time.Now().Add(i.config.SessionDuration)
 
-	signedUserState, err := userInfo.sign(i.secret)
+	signedUserState, err := userInfo.sign(secretForMe)
 	if err != nil {
 		return fmt.Errorf("failed to sign user state: %w", err)
 	}
@@ -134,7 +136,7 @@ func (i *Instance) redirectToAuthorize(w http.ResponseWriter, r *http.Request, u
 	q.Set("state", urlState.nonce)
 	url.RawQuery = q.Encode()
 
-	stateStr := urlState.sign(i.secret)
+	stateStr := urlState.sign(i.secretFor(r.Host))
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
 		Value:    stateStr,
