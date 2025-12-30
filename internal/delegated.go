@@ -107,6 +107,7 @@ func (i *Instance) handleFinalizeAccessDelegation(w http.ResponseWriter, r *http
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
 		Value:    "",
+		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   -1,
 	})

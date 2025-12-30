@@ -116,6 +116,7 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
 		Value:    "",
+		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   -1,
 	})
