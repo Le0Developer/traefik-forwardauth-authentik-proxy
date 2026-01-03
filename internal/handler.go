@@ -50,7 +50,7 @@ func (i *Instance) Mux() *http.ServeMux {
 	fixmux := http.NewServeMux()
 	fixmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Forwarded-Host") != "" {
-			host = r.Header.Get("X-Forwarded-Host")
+			host := r.Header.Get("X-Forwarded-Host")
 			r.Host = host
 			r.URL.Host = host
 		} else if r.Host != "" {
