@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type Instance struct {
@@ -42,7 +43,14 @@ func (i *Instance) Mux() *http.ServeMux {
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if uri := r.Header.Get("X-Forwarded-Uri"); uri != "" {
-			r.URL.Path = uri
+			uri := r.Header.Get("X-Forwarded-Uri")
+			parsed, err := url.Parse(uri)
+			if err != nil {
+				fmt.Printf("failed to parse X-Forwarded-Uri: %v\n", err)
+			} else {
+				r.URL.Path = parsed.Path
+				r.URL.RawQuery = parsed.RawQuery
+			}
 		}
 		writeError(w, i.handleVerifyDelegatedAccess(w, r))
 	})
