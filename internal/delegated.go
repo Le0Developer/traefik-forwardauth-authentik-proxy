@@ -155,7 +155,7 @@ func (i *Instance) redirectToAccess(w http.ResponseWriter, r *http.Request, stat
 		state = append(state, newURLState(r))
 	}
 
-	url := i.config.BaseURL
+	url := *i.config.BaseURL
 	q := url.Query()
 	// we need to sign it, to avoid open redirect vulnerabilities
 	q.Set("s", state[0].sign(i.secretFor(url.Host)))
@@ -164,6 +164,7 @@ func (i *Instance) redirectToAccess(w http.ResponseWriter, r *http.Request, stat
 	http.SetCookie(w, &http.Cookie{
 		Name:     i.config.CSRFCookieName,
 		Value:    state[0].nonce,
+		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   300,
