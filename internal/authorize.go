@@ -125,6 +125,18 @@ func (i *Instance) handleAuthorize(w http.ResponseWriter, r *http.Request) error
 }
 
 func (i *Instance) redirectToAuthorize(w http.ResponseWriter, r *http.Request, urlState *urlstate) error {
+	// The existing session may have been signed with a previous process secret.
+	// Remove it before starting a new authorization flow so the browser does not
+	// keep sending an invalid session alongside the freshly issued CSRF cookie.
+	http.SetCookie(w, &http.Cookie{
+		Name:     i.config.CookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   -1,
+	})
+
 	url := *i.config.AuthentikBaseURL
 	url.Path = "/application/o/authorize/"
 	redirectURL := *i.config.BaseURL
